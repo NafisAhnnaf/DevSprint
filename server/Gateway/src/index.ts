@@ -38,7 +38,9 @@ healthCheck.setRedisClient(redis);
 
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:5173',
+}));
 app.use(metricsMiddleware);
 
 

@@ -3,7 +3,7 @@ import { PrismaPg } from '@prisma/adapter-pg'
 
 const pool = new PrismaPg({
     connectionString: process.env.DATABASE_URL!,
-    connectionLimit: 50
+    max: 100
 });
 const prisma = new PrismaClient({ adapter: pool });
 

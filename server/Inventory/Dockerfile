@@ -4,7 +4,8 @@ FROM node:24-alpine AS builder
 WORKDIR /usr/src/app
 
 COPY package*.json pnpm-lock.yaml* ./
-RUN npm install -g pnpm && pnpm config set store-dir /pnpm-store && pnpm install
+RUN npm install -g pnpm@9.15.2 && pnpm config set store-dir /pnpm-store && pnpm config set network-concurrency 15
+RUN --mount=type=cache,id=pnpm,target=/pnpm-store pnpm install
 
 COPY . .
 
@@ -18,7 +19,8 @@ FROM node:24-alpine
 WORKDIR /usr/src/app
 
 COPY package*.json pnpm-lock.yaml* ./
-RUN npm install -g pnpm && pnpm config set store-dir /pnpm-store && pnpm install --prod
+RUN npm install -g pnpm@9.15.2 && pnpm config set store-dir /pnpm-store && pnpm config set network-concurrency 15
+RUN --mount=type=cache,id=pnpm,target=/pnpm-store pnpm install --prod
 
 # Copy the compiled app
 COPY --from=builder /usr/src/app/dist ./dist
