@@ -99,7 +99,10 @@ app.get('/health/ready', healthCheck.readinessHandler);
 // Metrics endpoint
 app.get('/metrics', metricsHandler);
 
-
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error(`[ERROR] ${req.method} ${req.originalUrl}:`, err);
+    res.status(err.status || 500).json({ message: err.message || 'Internal Server Error', stack: err.stack });
+});
 
 app.listen(PORT, () => {
     console.log(`Gateway Service is running on port ${PORT}`);

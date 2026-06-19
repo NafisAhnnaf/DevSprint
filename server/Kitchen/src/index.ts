@@ -60,6 +60,11 @@ app.get('/', (req, res) => {
     });
 });
 
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error(`[ERROR] ${req.method} ${req.originalUrl}:`, err);
+    res.status(err.status || 500).json({ message: err.message || 'Internal Server Error', stack: err.stack });
+});
+
 app.listen(PORT, (err) => {
     if (err) console.log(err);
     console.log(`Kitchen Service is running on port ${PORT}`);

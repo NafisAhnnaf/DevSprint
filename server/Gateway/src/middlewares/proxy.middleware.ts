@@ -8,6 +8,12 @@ export const identityProxy = createProxyMiddleware({
     pathRewrite: {
         "^/api/identity": ""
     },
+    on: {
+        error: (err, req, res: any) => {
+            console.error("Identity Proxy Error:", err.message, "URL:", req.url);
+            res.status(502).json({ message: "Identity Service Proxy Error", error: err.message });
+        }
+    }
 })
 
 export const inventoryOrderProxy = createProxyMiddleware({
@@ -20,6 +26,10 @@ export const inventoryOrderProxy = createProxyMiddleware({
         return fullPath.replace('/api/inventory/order', '/order');
     },
     on: {
+        error: (err, req, res: any) => {
+            console.error("Proxy Error:", err.message, "URL:", req.url);
+            res.status(502).json({ message: "Proxy Error", error: err.message });
+        },
         proxyReq: (proxyReq, req) => {
             if (req.headers.user_id) {
                 proxyReq.setHeader("user_id", req.headers.user_id);
@@ -39,6 +49,10 @@ export const inventoryStockProxy = createProxyMiddleware({
         return fullPath.replace('/api/inventory/stock', '/stock');
     },
     on: {
+        error: (err, req, res: any) => {
+            console.error("Proxy Error:", err.message, "URL:", req.url);
+            res.status(502).json({ message: "Proxy Error", error: err.message });
+        },
         proxyReq: (proxyReq, req) => {
             if (req.headers.user_id) {
                 proxyReq.setHeader("user_id", req.headers.user_id);
@@ -61,6 +75,10 @@ export const inventoryOthersProxy = createProxyMiddleware({
         return fullPath.replace('/api/inventory', '');
     },
     on: {
+        error: (err, req, res: any) => {
+            console.error("Proxy Error:", err.message, "URL:", req.url);
+            res.status(502).json({ message: "Proxy Error", error: err.message });
+        },
         proxyReq: (proxyReq, req) => {
             if (req.headers.user_id) {
                 proxyReq.setHeader("user_id", req.headers.user_id);
@@ -84,6 +102,10 @@ export const kitchenProxy = createProxyMiddleware({
         return fullPath.replace('/api/kitchen', '');
     },
     on: {
+        error: (err, req, res: any) => {
+            console.error("Proxy Error:", err.message, "URL:", req.url);
+            res.status(502).json({ message: "Proxy Error", error: err.message });
+        },
         proxyReq: (proxyReq, req) => {
             if (req.headers.user_id) {
                 proxyReq.setHeader("user_id", req.headers.user_id);
@@ -102,6 +124,10 @@ export const notificationProxy = createProxyMiddleware({
         "^/api/notification": ""
     },
     on: {
+        error: (err, req, res: any) => {
+            console.error("Proxy Error:", err.message, "URL:", req.url);
+            res.status(502).json({ message: "Proxy Error", error: err.message });
+        },
         proxyReq: (proxyReq, req) => {
             if (req.headers.user_id) {
                 proxyReq.setHeader("user_id", req.headers.user_id);
