@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity, BarChart3, Flame, Bomb, X, PackagePlus, CheckCircle2, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
-import api from "../services/api";
+import api, { API_BASE_URL } from "../services/api";
 import PageWrapper from "../components/common/PageWrapper";
 
 const AdminUI = () => {
   const [isChaosEnabled, setIsChaosEnabled] = useState(false);
+  const grafanaHost = "http://" + window.location.hostname + ":3000";
   
   // --- Updated Modal States ---
   const [isStockModalOpen, setIsStockModalOpen] = useState(false);
@@ -15,11 +16,11 @@ const AdminUI = () => {
   const [showSuccess, setShowSuccess] = useState(false);
 
   const [services, setServices] = useState([
-    { name: "Gateway Service", endpoint: "http://localhost:5001/health", status: "loading", port: 5001 },
-    { name: "Identity Provider", endpoint: "http://localhost:5001/api/identity/health", status: "loading", port: 5002 },
-    { name: "Inventory Service", endpoint: "http://localhost:5001/api/inventory/health", status: "loading", port: 5003 },
-    { name: "Kitchen Service", endpoint: "http://localhost:5001/api/kitchen/health", status: "loading", port: 5004 },
-    { name: "Notification Hub", endpoint: "http://localhost:5001/api/notification/health", status: "loading", port: 5005 },
+    { name: "Gateway Service", endpoint: `${API_BASE_URL}/health`, status: "loading", port: 5001 },
+    { name: "Identity Provider", endpoint: `${API_BASE_URL}/api/identity/health`, status: "loading", port: 5002 },
+    { name: "Inventory Service", endpoint: `${API_BASE_URL}/api/inventory/health`, status: "loading", port: 5003 },
+    { name: "Kitchen Service", endpoint: `${API_BASE_URL}/api/kitchen/health`, status: "loading", port: 5004 },
+    { name: "Notification Hub", endpoint: `${API_BASE_URL}/api/notification/health`, status: "loading", port: 5005 },
   ]);
 
   const toggleChaosMode = async () => {
@@ -224,11 +225,11 @@ const AdminUI = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
                 <h3 className="font-bold flex items-center gap-2 mb-6 text-slate-800"><BarChart3 size={18} className="text-indigo-500" /> Live Latency</h3>
-                <iframe src="http://localhost:3000/d-solo/ad5nwzc/iut-cafe?orgId=1&from=now-15m&to=now&refresh=5s&timezone=browser&panelId=1&__feature.dashboardSceneSolo=true" width="100%" height="400" frameBorder="0" className="w-full h-64 rounded-xl border-0" title="Grafana Metrics" />
+                <iframe src={`${grafanaHost}/d-solo/ad5nwzc/iut-cafe?orgId=1&from=now-15m&to=now&refresh=5s&timezone=browser&panelId=1&__feature.dashboardSceneSolo=true`} width="100%" height="400" frameBorder="0" className="w-full h-64 rounded-xl border-0" title="Grafana Metrics" />
             </div>
           <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
             <h3 className="font-bold flex items-center gap-2 mb-6"><BarChart3 size={18} className="text-indigo-500" /> Order Throughput</h3>
-            <iframe src="http://localhost:3000/d-solo/adfthmb/iut-cafeteria-oversight?orgId=1&from=now-15m&to=now&refresh=5s&timezone=browser&refresh=auto&panelId=1&__feature.dashboardSceneSolo=true" width="450" height="200" frameBorder="0" className="w-full h-64 rounded-xl border-0" title="Throughput Metrics" />
+            <iframe src={`${grafanaHost}/d-solo/adfthmb/iut-cafeteria-oversight?orgId=1&from=now-15m&to=now&refresh=5s&timezone=browser&refresh=auto&panelId=1&__feature.dashboardSceneSolo=true`} width="450" height="200" frameBorder="0" className="w-full h-64 rounded-xl border-0" title="Throughput Metrics" />
           </div>
         </div>
       </div>

@@ -4,6 +4,10 @@ import { mq } from "../utils/mq.js";
 import { redis } from "../utils/redis.js";
 
 export class KitchenService {
+    static async getPendingJobs() {
+        return prisma.job.findMany({ where: { status: "ACCEPTED" } });
+    }
+
     static async getJobById(id: string) {
         return prisma.job.findUnique({ where: { id } });
     }

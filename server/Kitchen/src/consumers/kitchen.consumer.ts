@@ -5,6 +5,32 @@ import { KitchenService } from "../services/kitchen.service.js";
 
 export const KitchenConsumer = async () => {
     console.log("From Kitchen Consumer");
+
+    // Startup Recovery Logic: Find and resume any stuck ACCEPTED jobs
+    try {
+        const pendingJobs = await KitchenService.getPendingJobs();
+        console.log(`Found ${pendingJobs.length} stuck kitchen jobs to recover on startup.`);
+        for (const job of pendingJobs) {
+            console.log(`Recovering job: ${job.id} for order ${job.orderId}`);
+            const randomTime = Math.random() * 5000 + 2000; // simulate 2-7s prep
+            setTimeout(async () => {
+                try {
+                    await KitchenService.markCompleted(job.id);
+                    console.log(`Recovered job completed: ${job.id}`);
+                } catch (err: any) {
+                    console.error(`ERROR IN recovering job ${job.id}:`, err);
+                    try {
+                        await KitchenService.markFailed(job.id, err?.message || "UNKNOWN_ERROR");
+                    } catch (failErr) {
+                        console.error("ERROR IN markFailed during recovery:", failErr);
+                    }
+                }
+            }, randomTime);
+        }
+    } catch (recoveryErr) {
+        console.error("Failed to run startup job recovery:", recoveryErr);
+    }
+
     await mq.subscribe("inventory.order.queue", "order.created", async (msg) => {
         console.log("Trigger from order created", msg);
         if (!msg) return;

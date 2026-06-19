@@ -51,19 +51,66 @@ export class RabbitMQ {
     async subscribe(queueName: string, routingKey: string, handler: MessageHandler) {
         if (!this.channel) throw new Error("RabbitMQ not initialized");
 
-        await this.channel.assertQueue(queueName, { durable: true });
+        const dlxExchange = "dlx_exchange";
+        const dlqQueue = queueName + "_dlq";
+        const dlqRoutingKey = queueName + "_routing_dlq";
+
+        // Assert DLX and DLQ
+        await this.channel.assertExchange(dlxExchange, "direct", { durable: true });
+        await this.channel.assertQueue(dlqQueue, { durable: true });
+        await this.channel.bindQueue(dlqQueue, dlxExchange, dlqRoutingKey);
+
+        // Assert primary queue pointing to DLX
+        await this.channel.assertQueue(queueName, { 
+            durable: true,
+            arguments: {
+                "x-dead-letter-exchange": dlxExchange,
+                "x-dead-letter-routing-key": dlqRoutingKey
+            }
+        });
         await this.channel.bindQueue(queueName, this.exchange, routingKey);
 
         this.channel.consume(queueName, async (msg: ConsumeMessage | null) => {
             if (!msg) return;
 
+            const headers = msg.properties.headers || {};
+            const retries = headers["x-retries"] || 0;
+            let content: any;
+            
             try {
-                const content = JSON.parse(msg.content.toString());
+                content = JSON.parse(msg.content.toString());
+            } catch (parseErr) {
+                console.error("Failed to parse message content:", parseErr);
+                this.channel!.ack(msg); // Drop unparseable message
+                return;
+            }
+
+            try {
                 await handler(content);
                 this.channel!.ack(msg); // message processed successfully
             } catch (err) {
-                console.error("Message processing failed:", err);
-                this.channel!.nack(msg, false, false); // reject, don't retry
+                console.error(`Message processing failed on queue ${queueName}:`, err);
+                
+                if (retries < 3) {
+                    console.warn(`[Retry ${retries + 1}/3] Scheduled for queue ${queueName} in 2s`);
+                    this.channel!.ack(msg); // Ack original message to prevent it from clogging the queue
+
+                    setTimeout(async () => {
+                        try {
+                            if (this.channel) {
+                                this.channel.publish(this.exchange, routingKey, Buffer.from(JSON.stringify(content)), {
+                                    persistent: true,
+                                    headers: { ...headers, "x-retries": retries + 1 }
+                                });
+                            }
+                        } catch (publishErr) {
+                            console.error("Failed to publish retry message:", publishErr);
+                        }
+                    }, 2000);
+                } else {
+                    console.error(`Max retries reached for message. Routing natively to DLQ: ${dlqQueue}`);
+                    this.channel!.nack(msg, false, false); // Nack with requeue=false routes it to DLQ
+                }
             }
         });
     }

@@ -32,7 +32,7 @@ const Signup = () => {
 
     try {
       const res = await api.post(
-        "http://localhost:8005/api/identity/auth/register",
+        "/api/identity/auth/register",
         {
           studentId: formData.studentId,
           name: formData.name,

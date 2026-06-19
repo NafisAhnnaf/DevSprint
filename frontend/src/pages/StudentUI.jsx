@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, CheckCircle2, Package, ChefHat, Bell, History, Clock, Hash } from "lucide-react";
-import api from "../services/api";
+import api, { API_BASE_URL } from "../services/api";
 import PageWrapper from "../components/common/PageWrapper";
 import { SSE } from "sse.js";
 
@@ -16,7 +16,7 @@ const StudentUI = () => {
     setIsTableLoading(true);
     try {
       const response = await api.get(
-        "http://localhost:8005/api/inventory/order/user",
+        "/api/inventory/order/user",
       );
       if (response.data?.payload?.orders) {
         setPastOrders(response.data.payload.orders);
@@ -35,7 +35,7 @@ const StudentUI = () => {
   useEffect(() => {
     try {
       const token = localStorage.getItem("token");
-      const session = new SSE("http://localhost:8005/api/notification/orders", {
+      const session = new SSE(API_BASE_URL + "/api/notification/orders", {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "text/plain",
@@ -58,7 +58,7 @@ const StudentUI = () => {
   const placeOrder = async () => {
     setLoading(true);
     try {
-      const response = await api.post("http://localhost:8005/api/inventory/order");
+      const response = await api.post("/api/inventory/order");
       if (response.data?.payload?.order.status) {
         setOrderStatus(response.data.payload.order.status);
         fetchPastOrders(); // Refresh table immediately after placing order
