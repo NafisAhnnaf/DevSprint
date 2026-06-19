@@ -1,0 +1,259 @@
+services:
+# Database Service:
+  dev-sprint-postgres-user:
+    image: postgres:16-alpine
+    container_name: dev-sprint-postgres-user
+    environment:
+      POSTGRES_USER: dhongorsho
+      POSTGRES_PASSWORD: dhongorsho123
+      POSTGRES_DB: user_db
+    ports:
+      - "5433:5432"       # different host port to avoid conflicts
+    volumes:
+      - user-db-data:/var/lib/postgresql/data
+    # profiles: ["dev"]
+    networks:
+      - sprint-network 
+
+# Database Service:
+  dev-sprint-postgres-inventory:
+    image: postgres:16-alpine
+    container_name: dev-sprint-postgres-inventory
+    environment:
+      POSTGRES_USER: dhongorsho
+      POSTGRES_PASSWORD: dhongorsho123
+      POSTGRES_DB: inventory_db
+    ports:
+      - "5434:5432"       # different host port to avoid conflicts
+    volumes:
+      - inventory-db-data:/var/lib/postgresql/data
+    # profiles: ["dev"]
+    networks:
+      - sprint-network 
+
+# Database Service:
+  dev-sprint-postgres-kitchen:
+    image: postgres:16-alpine
+    container_name: dev-sprint-postgres-kitchen
+    environment:
+      POSTGRES_USER: dhongorsho
+      POSTGRES_PASSWORD: dhongorsho123
+      POSTGRES_DB: kitchen_db
+    ports:
+      - "5435:5432"       # different host port to avoid conflicts
+    volumes:
+      - kitchen-db-data:/var/lib/postgresql/data
+    # profiles: ["dev"]
+    networks:
+      - sprint-network 
+
+
+# Caching Service:
+  dev-sprint-redis:
+    image: redis:7-alpine
+    container_name: dev-sprint-redis
+    ports:
+      - "6380:6379"       # different host port
+    command: ["redis-server", "--save", "60", "1", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    # profiles: ["dev"]
+    networks:
+      - sprint-network 
+
+# RabbitMQ Service:
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: rabbitmq_service
+    ports:
+      - "5672:5672"   # AMQP protocol port
+      - "15672:15672" # Management UI port
+    environment:
+      RABBITMQ_DEFAULT_USER: "IUT_Dhongorsho"
+      RABBITMQ_DEFAULT_PASS: "Dhongorsho123"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: always
+    # profiles: ["dev"]
+    networks:
+      - sprint-network 
+
+# Gateway Service:
+  gateway:
+    build: ./Gateway
+    container_name: dev-sprint-gateway
+    depends_on:
+      - dev-sprint-postgres-user
+      - dev-sprint-redis
+    environment:
+      REDIS_URL: "redis://dev-sprint-redis:6379"
+      PORT: 4001
+      JWT_SECRET: "dhongorsho"
+      IDENTITY_SERVICE_URL: "http://dev-sprint-identity:4002"
+      INVENTORY_SERVICE_URL: "http://dev-sprint-inventory:4003"
+      KITCHEN_SERVICE_URL: "http://dev-sprint-kitchen:4004"
+      NOTIFICATION_SERVICE_URL: "http://dev-sprint-notification:4005" 
+    ports:
+      - "5001:4001"
+    restart: always
+    networks:
+      - sprint-network 
+
+
+# Idnetity Service:
+  identity:
+    build: ./Identity
+    container_name: dev-sprint-identity
+    depends_on:
+      - dev-sprint-postgres-user
+      - dev-sprint-redis
+    environment:
+      DATABASE_URL: "postgresql://dhongorsho:dhongorsho123@dev-sprint-postgres-user:5432/user_db?schema=public"
+      REDIS_URL: "redis://dev-sprint-redis:6379"
+      PORT: 4002
+      JWT_SECRET: "dhongorsho"
+    ports:
+      - "5002:4002"
+    restart: always
+    networks:
+      - sprint-network 
+
+
+# Inventory Service:
+  inventory:
+    build: ./Inventory
+    container_name: dev-sprint-inventory
+    depends_on:
+      - dev-sprint-postgres-inventory
+      - dev-sprint-redis
+      - rabbitmq
+    environment:
+      DATABASE_URL: "postgresql://dhongorsho:dhongorsho123@dev-sprint-postgres-inventory:5432/inventory_db?schema=public"
+      REDIS_URL: "redis://dev-sprint-redis:6379"
+      PORT: 4003
+      RABBITMQ_URL: "amqp://IUT_Dhongorsho:Dhongorsho123@rabbitmq:5672"  
+      RABBITMQ_EXCHANGE: "order_exchange" 
+    ports:
+      - "5003:4003"
+    restart: always
+    networks:
+      - sprint-network 
+
+
+# Ktichen Service:
+  kitchen:
+    build: ./Kitchen
+    container_name: dev-sprint-kitchen
+    depends_on:
+      - dev-sprint-postgres-kitchen
+      - dev-sprint-redis
+      - rabbitmq
+    environment:
+      DATABASE_URL: "postgresql://dhongorsho:dhongorsho123@dev-sprint-postgres-kitchen:5432/kitchen_db?schema=public"
+      REDIS_URL: "redis://dev-sprint-redis:6379"
+      PORT: 4004
+      RABBITMQ_URL: "amqp://IUT_Dhongorsho:Dhongorsho123@rabbitmq:5672"  
+      RABBITMQ_EXCHANGE: "order_exchange" 
+    ports:
+      - "5004:4004"
+    restart: always
+    networks:
+      - sprint-network 
+
+
+
+# Notification Service:
+  notification:
+    build: ./Notification
+    container_name: dev-sprint-notification
+    depends_on:
+      - dev-sprint-redis
+      - rabbitmq
+    environment:
+      REDIS_URL: "redis://dev-sprint-redis:6379"
+      PORT: 4005
+      RABBITMQ_URL: "amqp://IUT_Dhongorsho:Dhongorsho123@rabbitmq:5672" 
+      RABBITMQ_EXCHANGE: "order_exchange"  
+    ports:
+      - "5005:4005"
+    restart: always
+    networks:
+      - sprint-network 
+
+  # Monitoring Stack
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: dev-sprint-prometheus
+    volumes:
+      - ./Prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    restart: always
+    networks:
+      - sprint-network
+    # profiles: ["dev"]
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: dev-sprint-grafana
+    depends_on:
+      - prometheus
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: dhongorsho123
+      GF_SERVER_ENABLE_GZIP: "true"
+      GF_DEFAULT_ORG_ID: 1  
+      GF_SECURITY_ALLOW_EMBEDDING: "true"  # This allows embedding
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./Grafana/provisioning:/etc/grafana/provisioning
+    restart: always
+    networks:
+      - sprint-network
+    # profiles: ["dev"]
+
+
+
+  dev-sprint-k6:
+    image: grafana/k6:latest
+    container_name: dev-sprint-k6
+    volumes:
+      - ./Tests/All/load-test.js:/scripts/load-test.js  # Mount your test script
+    # command: run /scripts/load-test.js
+    networks:
+      - sprint-network
+    # profiles: ["loadtest"]
+
+
+  dev-sprint-frontend:
+    build: ../frontend
+    container_name: dev-sprint-frontend
+    environment:
+      VITE_API_URL: "http://localhost:5001"
+    ports:
+    - "5173:5173"
+    restart: always
+    networks:
+    - sprint-network
+
+
+volumes:
+  user-db-data:
+  inventory-db-data:
+  kitchen-db-data:
+  redis-data:
+  rabbitmq_data:
+  prometheus-data:
+  grafana-data:
+  
+
+networks:
+  sprint-network:
+    driver: bridge

@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Stock" ALTER COLUMN "forDate" SET DATA TYPE TIMESTAMP(6);

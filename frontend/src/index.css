@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+:root {
+  --primary-blue: #4f46e5;
+  --primary-purple: #7c3aed;
+  --bg-light: #f8fafc;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900;
+  font-family: 'Inter', sans-serif;
+}
+
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600;
+}

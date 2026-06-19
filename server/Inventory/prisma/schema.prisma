@@ -1,0 +1,57 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum StockStatus {
+  AVAILABLE
+  RESERVED
+  USED
+}
+model Stock {
+  id        String      @id @db.Uuid @default(uuid())
+  forDate   DateTime    @db.Date 
+  status    StockStatus @default(AVAILABLE)
+  createdAt DateTime    @db.Timestamp(6) @default(now())
+  updatedAt DateTime    @updatedAt
+  order     Order[]
+  @@index([id])
+}
+
+enum OrderStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+  FAILED
+}
+
+model Order{
+  id  String @id @db.Uuid @default(uuid())
+  user_id String @db.Uuid
+  stock_id String? @db.Uuid
+  stock Stock? @relation(fields: [stock_id], references: [id], onDelete: SetNull)
+  forDate DateTime @db.Date
+  status OrderStatus @default(PENDING)
+  createdAt DateTime @db.Timestamp(6) @default(now()) 
+  updatedAt DateTime @updatedAt
+  ticket Ticket[]
+}
+
+
+model Ticket{
+  id String @id @db.Uuid @default(uuid())
+  order_id String @db.Uuid
+  order Order  @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  issuedAt DateTime @db.Timestamp(6) @default(now())
+  isRedeemed Boolean @default(false)
+}
