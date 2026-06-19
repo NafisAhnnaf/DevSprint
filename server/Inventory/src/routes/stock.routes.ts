@@ -3,6 +3,7 @@ import { StockController } from "../controllers/stock.controller.js";
 const router = Router();
 
 router.get('/date/:forDate', StockController.getStocksByDate);
+router.get('/summary', StockController.getAllStockSummary);
 router.get('/:id', StockController.getStockById);
 router.get('/', StockController.getTodaysStockQty);
 router.post('/', StockController.createStock);

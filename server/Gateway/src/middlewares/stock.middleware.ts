@@ -2,7 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import { decodeJwt } from "../utils/jwt.js";
 import { redis } from "../utils/redis.js";
 import axios from "axios";
-import { formatDateForCache, formatDateForDb } from "../utils/formatDate.js";
+import { formatDateForCache, getTodayDateString } from "../utils/formatDate.js";
 
 
 export const stockGuard = async (
@@ -17,8 +17,7 @@ export const stockGuard = async (
             return next();
         }
         console.log("Checking stock availability...");
-        const today = new Date().toISOString();
-        const date = formatDateForCache(today);
+        const date = getTodayDateString();
         const cacheKey = `stock:${date}`;
         console.log("Cache key for stock:", cacheKey);
 

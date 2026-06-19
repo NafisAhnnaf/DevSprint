@@ -10,6 +10,8 @@ import {
   CheckCircle2,
   ChevronRight,
   Calendar as CalendarIcon,
+  Trash2,
+  Loader2
 } from "lucide-react";
 import api from "../services/api";
 import PageWrapper from "../components/common/PageWrapper";
@@ -26,6 +28,37 @@ const AdminUI = () => {
     new Date().toISOString().split("T")[0],
   );
   const [showSuccess, setShowSuccess] = useState(false);
+  const [stockSummary, setStockSummary] = useState([]);
+  const [isStockLoading, setIsStockLoading] = useState(true);
+
+  const fetchStockSummary = async () => {
+    setIsStockLoading(true);
+    try {
+      const response = await api.get(`${api_url}/api/inventory/stock/summary`);
+      if (response.data?.payload?.summary) {
+        setStockSummary(response.data.payload.summary);
+      }
+    } catch (err) {
+      console.error("Failed to fetch stock summary", err);
+    } finally {
+      setIsStockLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStockSummary();
+  }, []);
+
+  const deleteStock = async (date) => {
+    if (!window.confirm(`Are you sure you want to delete ALL stock for ${date}? This may cause pending orders to fail.`)) return;
+    try {
+      await api.delete(`${api_url}/api/inventory/stock/date/${date}`);
+      fetchStockSummary();
+    } catch (err) {
+      alert("Failed to delete stock");
+      console.error(err);
+    }
+  };
 
   const [services, setServices] = useState([
     {
@@ -66,14 +99,21 @@ const AdminUI = () => {
 
     try {
       if (willEnable) {
-        // Ensure the path includes /api if your Gateway routes it that way
-        await api.post("/api/chaos/load-test", { action: "start" });
+        // KILLING: Kill microservices first, then Gateway
+        const microservices = services.filter(s => s.name !== "Gateway Service");
+        await Promise.all(microservices.map(s => api.post(s.endpoint.replace('/health', '/chaos/kill'))));
+        const gateway = services.find(s => s.name === "Gateway Service");
+        if (gateway) await api.post(gateway.endpoint.replace('/health', '/chaos/kill'));
       } else {
-        await api.post("/api/chaos/load-test", { action: "stop" });
+        // RESTORING: Restore Gateway first, then microservices
+        const gateway = services.find(s => s.name === "Gateway Service");
+        if (gateway) await api.post(gateway.endpoint.replace('/health', '/chaos/kill'));
+        const microservices = services.filter(s => s.name !== "Gateway Service");
+        await Promise.all(microservices.map(s => api.post(s.endpoint.replace('/health', '/chaos/kill'))));
       }
     } catch (err) {
       console.error("Chaos control failed", err);
-      setIsChaosEnabled(!willEnable); // This is what's flipping it back!
+      setIsChaosEnabled(!willEnable);
     }
   };
 
@@ -101,7 +141,11 @@ const AdminUI = () => {
 
   const triggerChaos = async (serviceName) => {
     try {
-      await api.post("/chaos/kill", { service: serviceName });
+      const service = services.find(s => s.name === serviceName);
+      if (service) {
+        const killEndpoint = service.endpoint.replace('/health', '/chaos/kill');
+        await api.post(killEndpoint);
+      }
     } catch (err) {
       console.error("Chaos command failed", err);
     }
@@ -137,6 +181,7 @@ const AdminUI = () => {
 
     setTimeout(() => {
       closeStockModal();
+      fetchStockSummary();
     }, 2000);
   };
 
@@ -356,22 +401,16 @@ const AdminUI = () => {
               <p className="text-xs text-slate-400 mt-1">
                 Port: {service.port}
               </p>
-              <div className="flex flex-col gap-2 mt-4">
                 <button
                   onClick={() => triggerChaos(service.name)}
-                  className="w-full py-2 text-xs font-bold border border-red-100 text-red-500 rounded-lg hover:bg-red-50 transition-colors"
+                  className={`w-full py-2 text-xs font-bold border rounded-lg transition-colors ${
+                    service.status === 'healthy' 
+                      ? 'border-red-100 text-red-500 hover:bg-red-50' 
+                      : 'border-green-100 text-green-500 hover:bg-green-50'
+                  }`}
                 >
-                  Kill Service
+                  {service.status === 'healthy' ? 'Kill Service' : 'Restore Service'}
                 </button>
-                {service.name === "Inventory Service" && (
-                  <button
-                    onClick={() => setIsStockModalOpen(true)}
-                    className="w-full py-2 text-xs font-bold bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors flex items-center justify-center gap-1"
-                  >
-                    <PackagePlus size={14} /> Add Stock
-                  </button>
-                )}
-              </div>
             </motion.div>
           ))}
         </div>
@@ -404,6 +443,79 @@ const AdminUI = () => {
               className="w-full h-64 rounded-xl border-0"
               title="Throughput Metrics"
             />
+          </div>
+        </div>
+
+        {/* --- STOCK MANAGEMENT SECTION --- */}
+        <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 mt-8">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="text-2xl font-extrabold text-slate-800 flex items-center gap-2">
+                <PackagePlus size={24} className="text-indigo-500" />
+                Inventory & Menu Management
+              </h2>
+              <p className="text-slate-500">Manage daily stock levels</p>
+            </div>
+            <button
+              onClick={() => setIsStockModalOpen(true)}
+              className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg shadow-indigo-200 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+            >
+              <PackagePlus size={18} /> Add New Stock
+            </button>
+          </div>
+
+          <div className="overflow-x-auto rounded-xl border border-slate-100">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50">
+                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">
+                    Effective Date
+                  </th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-center">
+                    Available Portions
+                  </th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {isStockLoading ? (
+                  <tr>
+                    <td colSpan="3" className="px-6 py-12 text-center text-slate-400">
+                      <Loader2 className="animate-spin inline mr-2" /> Loading stocks...
+                    </td>
+                  </tr>
+                ) : stockSummary.length === 0 ? (
+                  <tr>
+                    <td colSpan="3" className="px-6 py-12 text-center text-slate-400 italic">
+                      No stocks available. Add some above!
+                    </td>
+                  </tr>
+                ) : (
+                  stockSummary.map((item, idx) => (
+                    <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-6 py-4 font-mono font-bold text-slate-700">
+                        {new Date(item.date).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span className="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-sm font-bold">
+                          {item.available}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button
+                          onClick={() => deleteStock(item.date)}
+                          className="px-4 py-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors inline-flex items-center gap-2 font-bold text-sm"
+                        >
+                          <Trash2 size={16} /> Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

@@ -1,8 +1,13 @@
 import { createProxyMiddleware } from "http-proxy-middleware"
 import { Request } from "express";
+import http from 'http';
+
+const proxyAgent = new http.Agent({ keepAlive: true, maxSockets: 500 });
+
 export const identityProxy = createProxyMiddleware({
     target: process.env.IDENTITY_SERVICE_URL || "http://dev-sprint-identity:4002",
     changeOrigin: true,
+    agent: proxyAgent,
     timeout: 5000,
     proxyTimeout: 5000,
     pathRewrite: {
@@ -19,6 +24,7 @@ export const identityProxy = createProxyMiddleware({
 export const inventoryOrderProxy = createProxyMiddleware({
     target: process.env.INVENTORY_SERVICE_URL || "http://dev-sprint-inventory:4003",
     changeOrigin: true,
+    agent: proxyAgent,
     timeout: 5000,
     proxyTimeout: 5000,
     pathRewrite: function (path, req: Request) {
@@ -42,6 +48,7 @@ export const inventoryOrderProxy = createProxyMiddleware({
 export const inventoryStockProxy = createProxyMiddleware({
     target: process.env.INVENTORY_SERVICE_URL || "http://dev-sprint-inventory:4003",
     changeOrigin: true,
+    agent: proxyAgent,
     timeout: 5000,
     proxyTimeout: 5000,
     pathRewrite: function (path, req: Request) {
@@ -68,6 +75,7 @@ export const inventoryStockProxy = createProxyMiddleware({
 export const inventoryOthersProxy = createProxyMiddleware({
     target: process.env.INVENTORY_SERVICE_URL || "http://dev-sprint-inventory:4003",
     changeOrigin: true,
+    agent: proxyAgent,
     timeout: 5000,
     proxyTimeout: 5000,
     pathRewrite: function (path, req: Request) {
@@ -95,6 +103,7 @@ export const inventoryOthersProxy = createProxyMiddleware({
 export const kitchenProxy = createProxyMiddleware({
     target: process.env.KITCHEN_SERVICE_URL || "http://dev-sprint-kitchen:4004",
     changeOrigin: true,
+    agent: proxyAgent,
     timeout: 5000,
     proxyTimeout: 5000,
     pathRewrite: function (path, req: Request) {
@@ -118,8 +127,9 @@ export const kitchenProxy = createProxyMiddleware({
 export const notificationProxy = createProxyMiddleware({
     target: process.env.NOTIFICATION_SERVICE_URL || "http://dev-sprint-notification:4005",
     changeOrigin: true,
-    timeout: 5000,
-    proxyTimeout: 5000,
+    agent: proxyAgent,
+    timeout: 0, // Disable timeout for long-lived SSE connections
+    proxyTimeout: 0,
     pathRewrite: {
         "^/api/notification": ""
     },

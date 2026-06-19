@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { OrderService } from "../services/order.service.js";
+import { getTodayDateString } from "../utils/formatDate.js";
 
 export class OrderController {
     static async getOrderByUser(req: Request, res: Response) {
@@ -82,7 +83,7 @@ export class OrderController {
     static async createOrder(req: Request, res: Response) {
         try {
             const userId = req.headers.user_id as string;
-            const forDate = new Date().toISOString().split('T')[0];
+            const forDate = getTodayDateString();
 
             if (!userId) {
                 return res.status(401).json({ message: "Unauthorized" });

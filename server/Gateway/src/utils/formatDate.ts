@@ -14,3 +14,7 @@ export const formatDateForCache = (date: string | Date): string => {
     // Return YYYY-MM-DD string for cache keys
     return d.toISOString().split('T')[0];
 }
+
+export const getTodayDateString = (timeZone = 'Asia/Dhaka'): string => {
+    return new Date().toLocaleDateString('en-CA', { timeZone });
+};

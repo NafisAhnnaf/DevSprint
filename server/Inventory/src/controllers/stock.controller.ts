@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
 import { StockService } from "../services/stock.service.js";
-import { formatDateForDb } from "../utils/formatDate.js";
+import { formatDateForDb, getTodayDateString } from "../utils/formatDate.js";
 
 export class StockController {
     // ========== GET METHODS ==========
 
     static async getTodaysStockQty(req: Request, res: Response) {
         try {
-            const today = new Date().toISOString().split('T')[0];
+            const today = getTodayDateString();
             const qty = await StockService.getAvailableCount(today);
 
             return res.status(200).json({
@@ -16,6 +16,18 @@ export class StockController {
             });
         } catch (err: any) {
             return this.handleError(res, err, "Failed to get stock count");
+        }
+    }
+
+    static async getAllStockSummary(req: Request, res: Response) {
+        try {
+            const summary = await StockService.getStockSummary();
+            return res.status(200).json({
+                payload: { summary },
+                message: "Stock summary retrieved"
+            });
+        } catch (err: any) {
+            return this.handleError(res, err, "Failed to get stock summary");
         }
     }
 

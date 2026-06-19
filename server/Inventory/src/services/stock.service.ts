@@ -31,6 +31,21 @@ export class StockService {
         });
     }
 
+    static async getStockSummary() {
+        const result = await prisma.stock.groupBy({
+            by: ['forDate'],
+            _count: {
+                id: true
+            },
+            where: { status: "AVAILABLE" },
+            orderBy: { forDate: 'asc' }
+        });
+        return result.map(r => ({
+            date: r.forDate,
+            available: r._count.id
+        }));
+    }
+
     // ========== MUTATION METHODS ==========
 
     static async createStocks(quantity: number, forDate: string): Promise<number> {
