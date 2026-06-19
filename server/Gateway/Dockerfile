@@ -2,12 +2,12 @@ FROM node:24-alpine
 
 WORKDIR /usr/src/app
 
-COPY package.json package-lock.json ./
-RUN npm install
+COPY package.json pnpm-lock.yaml* ./
+RUN npm install -g pnpm && pnpm config set store-dir /pnpm-store && pnpm install
 
 COPY . .
 
-RUN npm run build
+RUN pnpm run build
 
 EXPOSE 4001
 

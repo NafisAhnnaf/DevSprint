@@ -95,6 +95,8 @@ services:
       NOTIFICATION_SERVICE_URL: "http://dev-sprint-notification:4005" 
     ports:
       - "5001:4001"
+    volumes:
+      - pnpm-store:/pnpm-store
     restart: always
     networks:
       - sprint-network 
@@ -114,6 +116,8 @@ services:
       JWT_SECRET: "dhongorsho"
     ports:
       - "5002:4002"
+    volumes:
+      - pnpm-store:/pnpm-store
     restart: always
     networks:
       - sprint-network 
@@ -135,6 +139,8 @@ services:
       RABBITMQ_EXCHANGE: "order_exchange" 
     ports:
       - "5003:4003"
+    volumes:
+      - pnpm-store:/pnpm-store
     restart: always
     networks:
       - sprint-network 
@@ -156,6 +162,8 @@ services:
       RABBITMQ_EXCHANGE: "order_exchange" 
     ports:
       - "5004:4004"
+    volumes:
+      - pnpm-store:/pnpm-store
     restart: always
     networks:
       - sprint-network 
@@ -176,6 +184,8 @@ services:
       RABBITMQ_EXCHANGE: "order_exchange"  
     ports:
       - "5005:4005"
+    volumes:
+      - pnpm-store:/pnpm-store
     restart: always
     networks:
       - sprint-network 
@@ -239,6 +249,8 @@ services:
       VITE_API_URL: "http://localhost:5001"
     ports:
     - "5173:5173"
+    volumes:
+      - pnpm-store:/pnpm-store
     restart: always
     networks:
     - sprint-network
@@ -252,6 +264,7 @@ volumes:
   rabbitmq_data:
   prometheus-data:
   grafana-data:
+  pnpm-store:
   
 
 networks:

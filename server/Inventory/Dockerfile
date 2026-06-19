@@ -3,13 +3,13 @@ FROM node:24-alpine AS builder
 
 WORKDIR /usr/src/app
 
-COPY package*.json ./
-RUN npm install
+COPY package*.json pnpm-lock.yaml* ./
+RUN npm install -g pnpm && pnpm config set store-dir /pnpm-store && pnpm install
 
 COPY . .
 
 RUN npx prisma generate
-RUN npm run build
+RUN pnpm run build
 
 
 # ---------- RUNTIME STAGE ----------
@@ -17,8 +17,8 @@ FROM node:24-alpine
 
 WORKDIR /usr/src/app
 
-COPY package*.json ./
-RUN npm install --omit=dev
+COPY package*.json pnpm-lock.yaml* ./
+RUN npm install -g pnpm && pnpm config set store-dir /pnpm-store && pnpm install --prod
 
 # Copy the compiled app
 COPY --from=builder /usr/src/app/dist ./dist

@@ -7,8 +7,9 @@ WORKDIR /app
 COPY package*.json ./
 COPY yarn.lock* package-lock.json* pnpm-lock.yaml* ./
 
-# Install dependencies
-RUN npm ci
+# Install pnpm and dependencies
+RUN npm install -g pnpm && pnpm config set store-dir /pnpm-store
+RUN pnpm install
 
 # Copy source code
 COPY . .
@@ -17,4 +18,4 @@ COPY . .
 EXPOSE 5173
 
 # Start dev server with host flag for network access
-CMD ["npm", "run", "dev", "--", "--host"]
+CMD ["pnpm", "run", "dev", "--", "--host"]
