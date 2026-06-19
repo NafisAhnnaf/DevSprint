@@ -19,8 +19,6 @@ import PageWrapper from "../components/common/PageWrapper";
 
 const AdminUI = () => {
   const [isChaosEnabled, setIsChaosEnabled] = useState(false);
-  const api_url = import.meta.env.VITE_API_URL || "http://localhost:5001";
-
   const grafanaHost = "http://" + window.location.hostname + ":3000";
 
   // --- Updated Modal States ---
@@ -37,7 +35,7 @@ const AdminUI = () => {
   const fetchStockSummary = async () => {
     setIsStockLoading(true);
     try {
-      const response = await api.get(`${api_url}/api/inventory/stock/summary`);
+      const response = await api.get("/api/inventory/stock/summary");
       if (response.data?.payload?.summary) {
         setStockSummary(response.data.payload.summary);
       }
@@ -60,7 +58,7 @@ const AdminUI = () => {
     )
       return;
     try {
-      await api.delete(`${api_url}/api/inventory/stock/date/${date}`);
+      await api.delete(`/api/inventory/stock/date/${date}`);
       fetchStockSummary();
     } catch (err) {
       alert("Failed to delete stock");
@@ -71,31 +69,31 @@ const AdminUI = () => {
   const [services, setServices] = useState([
     {
       name: "Gateway Service",
-      endpoint: `${API_BASE_URL}/health`,
+      endpoint: "/health",
       status: "loading",
       port: 5001,
     },
     {
       name: "Identity Provider",
-      endpoint: `${API_BASE_URL}/api/identity/health`,
+      endpoint: "/api/identity/health",
       status: "loading",
       port: 5002,
     },
     {
       name: "Inventory Service",
-      endpoint: `${API_BASE_URL}/api/inventory/health`,
+      endpoint: "/api/inventory/health",
       status: "loading",
       port: 5003,
     },
     {
       name: "Kitchen Service",
-      endpoint: `${API_BASE_URL}/api/kitchen/health`,
+      endpoint: "/api/kitchen/health",
       status: "loading",
       port: 5004,
     },
     {
       name: "Notification Hub",
-      endpoint: `${API_BASE_URL}/api/notification/health`,
+      endpoint: "/api/notification/health",
       status: "loading",
       port: 5005,
     },
@@ -187,7 +185,7 @@ const AdminUI = () => {
   const handleStockSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await api.post(`${api_url}/api/inventory/stock`, {
+      const response = await api.post(`/api/inventory/stock`, {
         quantity: stockAmount,
         forDate: stockDate,
       });

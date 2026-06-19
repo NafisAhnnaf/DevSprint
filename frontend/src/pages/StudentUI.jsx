@@ -20,12 +20,10 @@ const StudentUI = () => {
   const [loading, setLoading] = useState(false);
   const [pastOrders, setPastOrders] = useState([]); // New state for past orders
   const [isTableLoading, setIsTableLoading] = useState(true);
-  const api_url = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
   // Function to fetch past orders
   const fetchPastOrders = async () => {
     setIsTableLoading(true);
-    const api_url = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
     try {
       const response = await api.get("/api/inventory/order/user");
@@ -46,7 +44,7 @@ const StudentUI = () => {
   useEffect(() => {
     try {
       const token = localStorage.getItem("token");
-      const session = new SSE(`${api_url}/api/notification/orders`, {
+      const session = new SSE(`${API_BASE_URL}/api/notification/orders`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "text/plain",

@@ -103,7 +103,7 @@ services:
       - dev-sprint-postgres-user
       - dev-sprint-redis
     environment:
-      DATABASE_URL: "postgresql://dhongorsho:dhongorsho123@dev-sprint-postgres-user:5432/user_db?schema=public&connection_limit=3"
+      DATABASE_URL: "postgresql://dhongorsho:dhongorsho123@dev-sprint-postgres-user:5432/user_db?schema=public&connection_limit=40"
       REDIS_URL: "redis://dev-sprint-redis:6379"
       PORT: 4002
       JWT_SECRET: "dhongorsho"
@@ -124,7 +124,7 @@ services:
       - dev-sprint-redis
       - rabbitmq
     environment:
-      DATABASE_URL: "postgresql://dhongorsho:dhongorsho123@dev-sprint-postgres-inventory:5432/inventory_db?schema=public&connection_limit=3"
+      DATABASE_URL: "postgresql://dhongorsho:dhongorsho123@dev-sprint-postgres-inventory:5432/inventory_db?schema=public&connection_limit=40"
       REDIS_URL: "redis://dev-sprint-redis:6379"
       PORT: 4003
       RABBITMQ_URL: "amqp://IUT_Dhongorsho:Dhongorsho123@rabbitmq:5672"  
@@ -146,7 +146,7 @@ services:
       - dev-sprint-redis
       - rabbitmq
     environment:
-      DATABASE_URL: "postgresql://dhongorsho:dhongorsho123@dev-sprint-postgres-kitchen:5432/kitchen_db?schema=public&connection_limit=3"
+      DATABASE_URL: "postgresql://dhongorsho:dhongorsho123@dev-sprint-postgres-kitchen:5432/kitchen_db?schema=public&connection_limit=40"
       REDIS_URL: "redis://dev-sprint-redis:6379"
       PORT: 4004
       RABBITMQ_URL: "amqp://IUT_Dhongorsho:Dhongorsho123@rabbitmq:5672"  
@@ -203,6 +203,20 @@ services:
       - prometheus-data:/prometheus
     ports:
       - "9090:9090"
+    restart: always
+    networks:
+      - sprint-network
+
+  # Jaeger Distributed Tracing
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: dev-sprint-jaeger
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
     restart: always
     networks:
       - sprint-network

@@ -55,9 +55,11 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
     res.status(err.status || 500).json({ message: err.message || 'Internal Server Error', stack: err.stack });
 });
 
-app.listen(PORT, (err) => {
+const server = app.listen(PORT, (err) => {
     if (err) console.log(err);
     console.log(`Identity Service is running on port ${PORT}`);
     console.log(`Health check available at http://localhost:${PORT}/health`);
     console.log(`Metrics available at http://localhost:${PORT}/metrics`);
 });
+server.keepAliveTimeout = 65000;
+server.headersTimeout = 66000;

@@ -15,6 +15,6 @@ export const formatDateForCache = (date: string | Date): string => {
     return d.toISOString().split('T')[0];
 }
 
-export const getTodayDateString = (timeZone = 'Asia/Dhaka'): string => {
-    return new Date().toLocaleDateString('en-CA', { timeZone });
+export const getTodayDateString = (): string => {
+    return new Date().toISOString().split('T')[0];
 };

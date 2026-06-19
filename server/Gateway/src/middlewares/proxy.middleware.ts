@@ -8,8 +8,8 @@ export const identityProxy = createProxyMiddleware({
     target: process.env.IDENTITY_SERVICE_URL || "http://dev-sprint-identity:4002",
     changeOrigin: true,
     agent: proxyAgent,
-    timeout: 5000,
-    proxyTimeout: 5000,
+    timeout: 30000,
+    proxyTimeout: 30000,
     pathRewrite: {
         "^/api/identity": ""
     },
@@ -25,8 +25,8 @@ export const inventoryOrderProxy = createProxyMiddleware({
     target: process.env.INVENTORY_SERVICE_URL || "http://dev-sprint-inventory:4003",
     changeOrigin: true,
     agent: proxyAgent,
-    timeout: 5000,
-    proxyTimeout: 5000,
+    timeout: 30000,
+    proxyTimeout: 30000,
     pathRewrite: function (path, req: Request) {
         const fullPath = req.originalUrl;
         return fullPath.replace('/api/inventory/order', '/order');
@@ -49,8 +49,8 @@ export const inventoryStockProxy = createProxyMiddleware({
     target: process.env.INVENTORY_SERVICE_URL || "http://dev-sprint-inventory:4003",
     changeOrigin: true,
     agent: proxyAgent,
-    timeout: 5000,
-    proxyTimeout: 5000,
+    timeout: 30000,
+    proxyTimeout: 30000,
     pathRewrite: function (path, req: Request) {
         const fullPath = req.originalUrl;
         return fullPath.replace('/api/inventory/stock', '/stock');
@@ -76,8 +76,8 @@ export const inventoryOthersProxy = createProxyMiddleware({
     target: process.env.INVENTORY_SERVICE_URL || "http://dev-sprint-inventory:4003",
     changeOrigin: true,
     agent: proxyAgent,
-    timeout: 5000,
-    proxyTimeout: 5000,
+    timeout: 30000,
+    proxyTimeout: 30000,
     pathRewrite: function (path, req: Request) {
         const fullPath = req.originalUrl;
         return fullPath.replace('/api/inventory', '');
@@ -104,8 +104,8 @@ export const kitchenProxy = createProxyMiddleware({
     target: process.env.KITCHEN_SERVICE_URL || "http://dev-sprint-kitchen:4004",
     changeOrigin: true,
     agent: proxyAgent,
-    timeout: 5000,
-    proxyTimeout: 5000,
+    timeout: 30000,
+    proxyTimeout: 30000,
     pathRewrite: function (path, req: Request) {
         const fullPath = req.originalUrl;
         return fullPath.replace('/api/kitchen', '');
