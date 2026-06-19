@@ -24,7 +24,7 @@ const Login = () => {
     try {
       // Points to Identity Provider (via Gateway)
       const response = await api.post(
-        "http://localhost:8005/api/identity/auth/login",
+        `${import.meta.env.VITE_API_URL}/api/identity/auth/login`,
         { studentId, password },
       );
 
