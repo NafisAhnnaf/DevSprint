@@ -15,28 +15,24 @@ export class RabbitMQ {
 
     async connect(): Promise<void> {
         if (this.connection && this.channel) return;
-
-        try {
-            this.connection = await amqp.connect(this.url);
-
-            this.connection.on("close", () => {
-                console.error("RabbitMQ connection closed. Reconnecting...");
-                this.connection = null;
-                this.channel = null;
-                setTimeout(() => this.connect(), 5000);
-            });
-
-            this.connection.on("error", (err) => {
-                console.error("RabbitMQ connection error:", err);
-            });
-
-            this.channel = await this.connection.createChannel();
-            await this.channel.assertExchange(this.exchange, "topic", { durable: true });
-
-            console.log("RabbitMQ connected");
-        } catch (err) {
-            console.error("Failed to connect to RabbitMQ:", err);
-            setTimeout(() => this.connect(), 5000);
+        while (true) {
+            try {
+                this.connection = await amqp.connect(this.url);
+                this.connection.on("close", () => {
+                    console.error("RabbitMQ connection closed.");
+                    process.exit(1);
+                });
+                this.connection.on("error", (err) => {
+                    console.error("RabbitMQ connection error:", err);
+                });
+                this.channel = await this.connection.createChannel();
+                await this.channel.assertExchange(this.exchange, "topic", { durable: true });
+                console.log("RabbitMQ connected");
+                return;
+            } catch (err) {
+                console.error("Failed to connect to RabbitMQ:", err);
+                await new Promise(res => setTimeout(res, 5000));
+            }
         }
     }
 

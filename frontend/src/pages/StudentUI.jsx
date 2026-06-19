@@ -52,7 +52,9 @@ const StudentUI = () => {
         },
       });
       session.addEventListener("order-status", (msg) => {
+        console.log("[SSE Frontend] Raw message received:", msg);
         const data = JSON.parse(msg.data);
+        console.log("[SSE Frontend] Parsed order-status data:", data);
         setOrderStatus(data.status);
         // Refresh past orders list when a status update occurs (especially if it becomes READY)
         fetchPastOrders();

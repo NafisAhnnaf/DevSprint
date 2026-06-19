@@ -101,10 +101,14 @@ export class NotificationService {
        =============================== */
 
     private push(userId: UserId, event: string, payload: unknown) {
+        console.log(`[SSE Backend] Attempting to push event '${event}' to user ${userId}`);
         const userSessions = this.sessions.get(userId);
         if (!userSessions || userSessions.size === 0) {
+            console.log(`[SSE Backend] No active SSE session found for user ${userId}`);
             return false;
         }
+
+        console.log(`[SSE Backend] Found ${userSessions.size} active sessions for user ${userId}`);
 
         for (const session of [...userSessions]) {
             try {
@@ -114,9 +118,9 @@ export class NotificationService {
                 }
 
                 session.push(payload, event);
-
+                console.log(`[SSE Backend] Successfully pushed event '${event}' to session of user ${userId}`);
             } catch (err) {
-                console.error("SSE push failed:", err);
+                console.error("[SSE Backend] SSE push failed:", err);
                 userSessions.delete(session);
             }
         }
@@ -142,6 +146,7 @@ export class NotificationService {
             status,
             timestamp: Date.now(),
         };
+        console.log(`[SSE Backend] pushOrderStatus called for user ${userId}, order ${orderId}, status ${status}`);
         // ✅ Persist latest status
         await redis.set(
             `order:status:${orderId}`,
