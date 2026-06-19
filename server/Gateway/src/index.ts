@@ -9,7 +9,7 @@ import { adminGuard, userGuard } from './middlewares/auth.middleware.js';
 import { connectRedis, redis } from './utils/redis.js';
 import { stockGuard } from './middlewares/stock.middleware.js';
 import { identityProxy, inventoryOrderProxy, inventoryOthersProxy, inventoryStockProxy, kitchenProxy, notificationProxy } from "./middlewares/proxy.middleware.js";
-import { chaosMiddleware, chaosToggleHandler } from "./middlewares/chaos.middleware.js";
+import { chaosMiddleware, chaosToggleHandler, chaosLoadTestHandler } from "./middlewares/chaos.middleware.js";
 
 
 const app = express();
@@ -43,15 +43,17 @@ app.use(cors({
 }));
 app.use(metricsMiddleware);
 
+// Intercept chaos load-test and kill endpoints
+app.post("/api/chaos/load-test", chaosLoadTestHandler);
+app.post('/chaos/kill', chaosToggleHandler);
 
-app.use('/chaos/kill', chaosToggleHandler);
-app.use(chaosMiddleware)
+app.use(chaosMiddleware);
 
 // Logger Middleware:
 app.use((req, res, next) => {
     console.log(`${req.method} ${req.path}`);
     next();
-})
+});
 
 app.use("/api/identity", identityProxy);
 app.use(
@@ -82,7 +84,6 @@ app.use(
     userGuard,
     notificationProxy
 );
-app.use(express.json());
 // Internal endpoints
 app.get('/', (req, res) => {
     res.status(200).json({ message: "Gateway Service is up and running" });

@@ -11,6 +11,7 @@ import {
   Hash,
 } from "lucide-react";
 import api from "../services/api";
+import { API_BASE_URL } from "../services/api";
 import PageWrapper from "../components/common/PageWrapper";
 import { SSE } from "sse.js";
 
@@ -27,7 +28,7 @@ const StudentUI = () => {
     const api_url = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
     try {
-      const response = await api.get(`${api_url}/api/inventory/order/user`);
+      const response = await api.get("/api/inventory/order/user");
       if (response.data?.payload?.orders) {
         setPastOrders(response.data.payload.orders);
       }
@@ -70,7 +71,7 @@ const StudentUI = () => {
   const placeOrder = async () => {
     setLoading(true);
     try {
-      const response = await api.post(`${api_url}/api/inventory/order`);
+      const response = await api.post("/api/inventory/order");
       if (response.data?.payload?.order.status) {
         setOrderStatus(response.data.payload.order.status);
         fetchPastOrders(); // Refresh table immediately after placing order

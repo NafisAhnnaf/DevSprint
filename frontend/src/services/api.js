@@ -1,9 +1,13 @@
 import axios from "axios";
-import { useAuth } from "../context/AuthContext";
 
-// const { logout } = useAuth();
+export const API_BASE_URL = import.meta.env.DEV 
+  ? (import.meta.env.VITE_API_URL || "http://localhost:5001") 
+  : window.location.origin;
+
+console.log("Using API_BASE_URL:", API_BASE_URL);
+
 const api = axios.create({
-  baseURL: "http://localhost:5001", // Points to Order Gateway
+  baseURL: API_BASE_URL, // Points to Order Gateway dynamically
 });
 
 // Automatically add JWT to headers

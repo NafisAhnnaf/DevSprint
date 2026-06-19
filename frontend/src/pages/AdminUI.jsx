@@ -11,14 +11,17 @@ import {
   ChevronRight,
   Calendar as CalendarIcon,
   Trash2,
-  Loader2
+  Loader2,
 } from "lucide-react";
 import api from "../services/api";
+import { API_BASE_URL } from "../services/api";
 import PageWrapper from "../components/common/PageWrapper";
 
 const AdminUI = () => {
   const [isChaosEnabled, setIsChaosEnabled] = useState(false);
   const api_url = import.meta.env.VITE_API_URL || "http://localhost:5001";
+
+  const grafanaHost = "http://" + window.location.hostname + ":3000";
 
   // --- Updated Modal States ---
   const [isStockModalOpen, setIsStockModalOpen] = useState(false);
@@ -50,7 +53,12 @@ const AdminUI = () => {
   }, []);
 
   const deleteStock = async (date) => {
-    if (!window.confirm(`Are you sure you want to delete ALL stock for ${date}? This may cause pending orders to fail.`)) return;
+    if (
+      !window.confirm(
+        `Are you sure you want to delete ALL stock for ${date}? This may cause pending orders to fail.`,
+      )
+    )
+      return;
     try {
       await api.delete(`${api_url}/api/inventory/stock/date/${date}`);
       fetchStockSummary();
@@ -63,31 +71,31 @@ const AdminUI = () => {
   const [services, setServices] = useState([
     {
       name: "Gateway Service",
-      endpoint: "http://localhost:5001/health",
+      endpoint: `${API_BASE_URL}/health`,
       status: "loading",
       port: 5001,
     },
     {
       name: "Identity Provider",
-      endpoint: "http://localhost:5001/api/identity/health",
+      endpoint: `${API_BASE_URL}/api/identity/health`,
       status: "loading",
       port: 5002,
     },
     {
       name: "Inventory Service",
-      endpoint: "http://localhost:5001/api/inventory/health",
+      endpoint: `${API_BASE_URL}/api/inventory/health`,
       status: "loading",
       port: 5003,
     },
     {
       name: "Kitchen Service",
-      endpoint: "http://localhost:5001/api/kitchen/health",
+      endpoint: `${API_BASE_URL}/api/kitchen/health`,
       status: "loading",
       port: 5004,
     },
     {
       name: "Notification Hub",
-      endpoint: "http://localhost:5001/api/notification/health",
+      endpoint: `${API_BASE_URL}/api/notification/health`,
       status: "loading",
       port: 5005,
     },
@@ -100,16 +108,30 @@ const AdminUI = () => {
     try {
       if (willEnable) {
         // KILLING: Kill microservices first, then Gateway
-        const microservices = services.filter(s => s.name !== "Gateway Service");
-        await Promise.all(microservices.map(s => api.post(s.endpoint.replace('/health', '/chaos/kill'))));
-        const gateway = services.find(s => s.name === "Gateway Service");
-        if (gateway) await api.post(gateway.endpoint.replace('/health', '/chaos/kill'));
+        const microservices = services.filter(
+          (s) => s.name !== "Gateway Service",
+        );
+        await Promise.all(
+          microservices.map((s) =>
+            api.post(s.endpoint.replace("/health", "/chaos/kill")),
+          ),
+        );
+        const gateway = services.find((s) => s.name === "Gateway Service");
+        if (gateway)
+          await api.post(gateway.endpoint.replace("/health", "/chaos/kill"));
       } else {
         // RESTORING: Restore Gateway first, then microservices
-        const gateway = services.find(s => s.name === "Gateway Service");
-        if (gateway) await api.post(gateway.endpoint.replace('/health', '/chaos/kill'));
-        const microservices = services.filter(s => s.name !== "Gateway Service");
-        await Promise.all(microservices.map(s => api.post(s.endpoint.replace('/health', '/chaos/kill'))));
+        const gateway = services.find((s) => s.name === "Gateway Service");
+        if (gateway)
+          await api.post(gateway.endpoint.replace("/health", "/chaos/kill"));
+        const microservices = services.filter(
+          (s) => s.name !== "Gateway Service",
+        );
+        await Promise.all(
+          microservices.map((s) =>
+            api.post(s.endpoint.replace("/health", "/chaos/kill")),
+          ),
+        );
       }
     } catch (err) {
       console.error("Chaos control failed", err);
@@ -141,9 +163,9 @@ const AdminUI = () => {
 
   const triggerChaos = async (serviceName) => {
     try {
-      const service = services.find(s => s.name === serviceName);
+      const service = services.find((s) => s.name === serviceName);
       if (service) {
-        const killEndpoint = service.endpoint.replace('/health', '/chaos/kill');
+        const killEndpoint = service.endpoint.replace("/health", "/chaos/kill");
         await api.post(killEndpoint);
       }
     } catch (err) {
@@ -401,16 +423,18 @@ const AdminUI = () => {
               <p className="text-xs text-slate-400 mt-1">
                 Port: {service.port}
               </p>
-                <button
-                  onClick={() => triggerChaos(service.name)}
-                  className={`w-full py-2 text-xs font-bold border rounded-lg transition-colors ${
-                    service.status === 'healthy' 
-                      ? 'border-red-100 text-red-500 hover:bg-red-50' 
-                      : 'border-green-100 text-green-500 hover:bg-green-50'
-                  }`}
-                >
-                  {service.status === 'healthy' ? 'Kill Service' : 'Restore Service'}
-                </button>
+              <button
+                onClick={() => triggerChaos(service.name)}
+                className={`w-full py-2 text-xs font-bold border rounded-lg transition-colors ${
+                  service.status === "healthy"
+                    ? "border-red-100 text-red-500 hover:bg-red-50"
+                    : "border-green-100 text-green-500 hover:bg-green-50"
+                }`}
+              >
+                {service.status === "healthy"
+                  ? "Kill Service"
+                  : "Restore Service"}
+              </button>
             </motion.div>
           ))}
         </div>
@@ -482,19 +506,29 @@ const AdminUI = () => {
               <tbody className="divide-y divide-slate-50">
                 {isStockLoading ? (
                   <tr>
-                    <td colSpan="3" className="px-6 py-12 text-center text-slate-400">
-                      <Loader2 className="animate-spin inline mr-2" /> Loading stocks...
+                    <td
+                      colSpan="3"
+                      className="px-6 py-12 text-center text-slate-400"
+                    >
+                      <Loader2 className="animate-spin inline mr-2" /> Loading
+                      stocks...
                     </td>
                   </tr>
                 ) : stockSummary.length === 0 ? (
                   <tr>
-                    <td colSpan="3" className="px-6 py-12 text-center text-slate-400 italic">
+                    <td
+                      colSpan="3"
+                      className="px-6 py-12 text-center text-slate-400 italic"
+                    >
                       No stocks available. Add some above!
                     </td>
                   </tr>
                 ) : (
                   stockSummary.map((item, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                    <tr
+                      key={idx}
+                      className="hover:bg-slate-50/50 transition-colors"
+                    >
                       <td className="px-6 py-4 font-mono font-bold text-slate-700">
                         {new Date(item.date).toLocaleDateString()}
                       </td>

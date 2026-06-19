@@ -31,7 +31,7 @@ const Signup = () => {
     setError("");
     const api_url = import.meta.env.VITE_API_URL || "http://localhost:5001";
     try {
-      const res = await api.post(`${api_url}/api/identity/auth/register`, {
+      const res = await api.post("/api/identity/auth/register", {
         studentId: formData.studentId,
         name: formData.name,
         email: formData.email,
